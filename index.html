@@ -3,364 +3,804 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 情感配音 Demo | Zane Guo</title>
+  <title>AI 情感配音 · Zane Guo | IndexTTS2 高品质语音合成</title>
   <style>
+    /* ═══════════ Reset & Base ═══════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
     :root {
-      --primary: #6c5ce7;
-      --primary-dark: #5a4bd1;
-      --bg: #0f0f1a;
-      --card-bg: #1a1a2e;
-      --text: #e8e8f0;
-      --text-muted: #9696b0;
-      --border: #2a2a4a;
+      --bg: #0a0a12;
+      --surface: #12121e;
+      --card: #181828;
+      --card-hover: #1e1e32;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-light: rgba(255, 255, 255, 0.10);
+      --text: #eeedf2;
+      --text-secondary: #9896a8;
+      --text-muted: #6b6980;
+      --accent-1: #f59e0b;   /* gold */
+      --accent-2: #a78bfa;   /* violet */
+      --accent-3: #f472b6;   /* pink */
+      --glow-gold: rgba(245, 158, 11, 0.15);
+      --glow-violet: rgba(167, 139, 250, 0.15);
       --radius: 16px;
-      --shadow: 0 8px 32px rgba(108, 92, 231, 0.15);
+      --radius-sm: 10px;
+      --radius-xl: 24px;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
     body {
-      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 40px 20px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* ═══════════ Background Effects ═══════════ */
+    .bg-glow {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-glow::before, .bg-glow::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.4;
+    }
+    .bg-glow::before {
+      width: 600px; height: 600px;
+      background: var(--glow-violet);
+      top: -200px; right: -150px;
+      animation: float-bg 20s ease-in-out infinite;
+    }
+    .bg-glow::after {
+      width: 500px; height: 500px;
+      background: var(--glow-gold);
+      bottom: -150px; left: -100px;
+      animation: float-bg 25s ease-in-out infinite reverse;
+    }
+    @keyframes float-bg {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(40px, -40px) scale(1.05); }
+      66% { transform: translate(-20px, 30px) scale(0.95); }
+    }
+
+    /* ═══════════ Layout ═══════════ */
     .container {
-      max-width: 720px;
-      width: 100%;
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
     }
 
-    /* Header */
-    header {
-      text-align: center;
-      margin-bottom: 48px;
+    /* ═══════════ Nav Bar ═══════════ */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 64px;
     }
-
-    header h1 {
-      font-size: 28px;
+    .nav-brand {
+      font-size: 20px;
       font-weight: 700;
-      background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+      letter-spacing: -0.3px;
+    }
+    .nav-brand span {
+      color: var(--accent-1);
+    }
+    .nav-status {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-status .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ═══════════ Hero ═══════════ */
+    .hero {
+      text-align: center;
+      margin-bottom: 72px;
+      animation: fade-up 0.8s ease-out;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.10);
+      border: 1px solid rgba(245, 158, 11, 0.20);
+      border-radius: 100px;
+      padding: 5px 16px;
+      font-size: 13px;
+      color: var(--accent-1);
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 44px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════ Section Title ═══════════ */
+    .section-title {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-title h2 {
+      font-size: 26px;
+      font-weight: 600;
       margin-bottom: 8px;
     }
-
-    header .subtitle {
-      font-size: 16px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
+    .section-title p {
+      color: var(--text-secondary);
+      font-size: 15px;
     }
 
-    header .badge {
-      display: inline-block;
-      background: rgba(108, 92, 231, 0.2);
-      border: 1px solid rgba(108, 92, 231, 0.4);
-      color: #a29bfe;
-      padding: 4px 16px;
-      border-radius: 20px;
-      font-size: 13px;
+    /* ═══════════ Capabilities Grid ═══════════ */
+    .capabilities {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 72px;
     }
-
-    /* Intro */
-    .intro {
-      background: var(--card-bg);
+    .cap-item {
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 32px;
-      box-shadow: var(--shadow);
+      border-radius: var(--radius-sm);
+      padding: 20px 16px;
+      text-align: center;
+      transition: all 0.25s ease;
     }
-
-    .intro p {
-      color: var(--text-muted);
-      line-height: 1.8;
+    .cap-item:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
+      background: var(--card-hover);
+    }
+    .cap-item .icon {
+      font-size: 28px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .cap-item h4 {
       font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .cap-item p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
     }
 
-    .intro strong {
-      color: var(--text);
+    /* ═══════════ Demo Cards ═══════════ */
+    .demo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 72px;
     }
 
-    /* Demo Cards */
     .demo-card {
-      background: var(--card-bg);
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow);
-      transition: border-color 0.2s, transform 0.2s;
+      padding: 20px 24px 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      animation: fade-up 0.6s ease-out both;
     }
+    .demo-card:nth-child(1) { animation-delay: 0.05s; }
+    .demo-card:nth-child(2) { animation-delay: 0.10s; }
+    .demo-card:nth-child(3) { animation-delay: 0.15s; }
+    .demo-card:nth-child(4) { animation-delay: 0.20s; }
+    .demo-card:nth-child(5) { animation-delay: 0.25s; }
+
+    .demo-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      transition: opacity 0.3s;
+    }
+    .demo-card.emotion-sad::before    { background: linear-gradient(180deg, #60a5fa, #3b82f6); }
+    .demo-card.emotion-angry::before  { background: linear-gradient(180deg, #f87171, #ef4444); }
+    .demo-card.emotion-tender::before { background: linear-gradient(180deg, #f472b6, #ec4899); }
+    .demo-card.emotion-npc::before    { background: linear-gradient(180deg, #a78bfa, #8b5cf6); }
+    .demo-card.emotion-funny::before  { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
 
     .demo-card:hover {
-      border-color: var(--primary);
+      border-color: rgba(255, 255, 255, 0.12);
       transform: translateY(-2px);
+      background: var(--card-hover);
     }
 
-    .demo-card .card-header {
+    .demo-card .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .demo-card .card-left {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 14px;
     }
-
-    .demo-card .emoji-icon {
-      font-size: 28px;
-      width: 48px;
-      height: 48px;
+    .demo-card .card-emojibox {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(108, 92, 231, 0.1);
-      border-radius: 12px;
+      font-size: 22px;
+      flex-shrink: 0;
     }
+    .demo-card.emotion-sad .card-emojibox    { background: rgba(96,165,250,0.12); }
+    .demo-card.emotion-angry .card-emojibox  { background: rgba(248,113,113,0.12); }
+    .demo-card.emotion-tender .card-emojibox { background: rgba(244,114,182,0.12); }
+    .demo-card.emotion-npc .card-emojibox    { background: rgba(167,139,250,0.12); }
+    .demo-card.emotion-funny .card-emojibox  { background: rgba(251,191,36,0.12); }
 
     .demo-card .card-info h3 {
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 2px;
     }
-
-    .demo-card .card-info .meta {
-      font-size: 13px;
-      color: var(--text-muted);
+    .demo-card .card-info .tags {
       display: flex;
-      gap: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
-
-    .demo-card .card-info .meta span {
-      display: flex;
+    .demo-card .card-info .tag {
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.04);
+      border-radius: 4px;
+      padding: 1px 8px;
     }
 
-    /* Audio Player */
-    audio {
+    .demo-card .card-badge {
+      font-size: 12px;
+      padding: 3px 12px;
+      border-radius: 100px;
+      font-weight: 500;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+    .demo-card.emotion-sad .card-badge    { background: rgba(96,165,250,0.12); color: #93c5fd; }
+    .demo-card.emotion-angry .card-badge  { background: rgba(248,113,113,0.12); color: #fca5a5; }
+    .demo-card.emotion-tender .card-badge { background: rgba(244,114,182,0.12); color: #f9a8d4; }
+    .demo-card.emotion-npc .card-badge    { background: rgba(167,139,250,0.12); color: #c4b5fd; }
+    .demo-card.emotion-funny .card-badge  { background: rgba(251,191,36,0.12); color: #fcd34d; }
+
+    .demo-card .card-script {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 14px;
+      padding-left: 58px;
+      font-style: italic;
+    }
+    .demo-card .card-script::before {
+      content: '"';
+      color: var(--text-muted);
+    }
+    .demo-card .card-script::after {
+      content: '"';
+      color: var(--text-muted);
+    }
+
+    .demo-card .audio-wrapper {
+      padding-left: 58px;
+    }
+    .demo-card audio {
       width: 100%;
-      height: 44px;
+      height: 40px;
       border-radius: 8px;
       outline: none;
     }
-
-    audio::-webkit-media-controls-panel {
-      background: #252544;
+    .demo-card audio::-webkit-media-controls-panel {
+      background: #1e1e32;
+    }
+    .demo-card audio::-webkit-media-controls-current-time-display,
+    .demo-card audio::-webkit-media-controls-time-remaining-display {
+      color: var(--text-secondary);
+    }
+    .demo-card audio::-webkit-media-controls-play-button {
+      filter: brightness(1.2);
     }
 
-    audio::-webkit-media-controls-current-time-display,
-    audio::-webkit-media-controls-time-remaining-display {
-      color: var(--text-muted);
+    /* ═══════════ Process Steps ═══════════ */
+    .process-section {
+      margin-bottom: 72px;
     }
-
-    /* Contact */
-    .contact {
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .process-step {
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-top: 40px;
+      border-radius: var(--radius-sm);
+      padding: 20px 16px;
       text-align: center;
-      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .process-step .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(167, 139, 250, 0.12);
+      color: var(--accent-2);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .process-step h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .process-step p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
     }
 
-    .contact h3 {
-      font-size: 18px;
-      margin-bottom: 12px;
+    /* ═══════════ Contact ═══════════ */
+    .contact-section {
+      margin-bottom: 48px;
     }
-
-    .contact .contact-items {
+    .contact-card {
+      background: linear-gradient(135deg, rgba(167,139,250,0.06) 0%, rgba(245,158,11,0.04) 100%);
+      border: 1px solid rgba(167,139,250,0.12);
+      border-radius: var(--radius-xl);
+      padding: 48px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-2), var(--accent-1), transparent);
+    }
+    .contact-card .big-emoji {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 16px;
+    }
+    .contact-card h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .contact-card p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      max-width: 440px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .contact-card .contact-row {
       display: flex;
       justify-content: center;
-      gap: 32px;
+      gap: 40px;
       flex-wrap: wrap;
+      margin-bottom: 28px;
     }
-
-    .contact .contact-item {
+    .contact-card .contact-row a {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--text-muted);
-      font-size: 14px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 15px;
+      transition: color 0.2s;
     }
-
-    .contact .contact-item .label {
-      color: var(--text-muted);
+    .contact-card .contact-row a:hover {
+      color: var(--text);
     }
-
-    .contact .note {
-      margin-top: 16px;
+    .contact-card .contact-row .item-label {
       font-size: 13px;
       color: var(--text-muted);
-      opacity: 0.7;
+    }
+    .contact-card .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent-2), #7c3aed);
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      padding: 12px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.25s;
+    }
+    .contact-card .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(167,139,250,0.35);
+    }
+    .contact-card .footnote {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
     }
 
-    /* Footer */
+    /* ═══════════ Footer ═══════════ */
     footer {
       text-align: center;
-      margin-top: 32px;
-      padding: 20px;
-      color: var(--text-muted);
+      padding: 24px 0 40px;
+      border-top: 1px solid var(--border);
+    }
+    footer p {
       font-size: 13px;
-      opacity: 0.5;
+      color: var(--text-muted);
+    }
+    footer .tech {
+      margin-top: 4px;
+      font-size: 12px;
+      opacity: 0.6;
     }
 
-    /* Responsive */
+    /* ═══════════ Responsive ═══════════ */
+    @media (max-width: 768px) {
+      .container { padding: 0 16px; }
+      .hero h1 { font-size: 32px; }
+      .hero p { font-size: 16px; }
+      .capabilities { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; gap: 12px; }
+      .process-steps { grid-template-columns: repeat(2, 1fr); }
+      .contact-card { padding: 32px 20px; }
+      .contact-card .contact-row { gap: 20px; flex-direction: column; }
+      .demo-card .card-script { padding-left: 0; }
+      .demo-card .audio-wrapper { padding-left: 0; }
+      .nav { margin-bottom: 40px; }
+      .nav-status { display: none; }
+    }
+
     @media (max-width: 480px) {
-      body { padding: 20px 12px; }
-      header h1 { font-size: 22px; }
-      .contact .contact-items { flex-direction: column; gap: 12px; }
+      .hero h1 { font-size: 26px; }
+      .process-steps { grid-template-columns: 1fr; }
+      .contact-card .contact-row a { font-size: 14px; }
+      .pricing-card .price { font-size: 24px; }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
+  <!-- ═══ Background Glow ═══ -->
+  <div class="bg-glow"></div>
 
-  <!-- Header -->
-  <header>
-    <h1>🎙️ AI 情感配音 Demo</h1>
-    <p class="subtitle">Zane Guo · 基于 IndexTTS2 的高品质语音合成</p>
-    <span class="badge">✨ 情感可控 · 音色克隆 · 真人级表现力</span>
-  </header>
+  <!-- ═══ Container ═══ -->
+  <div class="container">
 
-  <!-- Intro -->
-  <div class="intro">
-    <p>
-      本 demo 使用 <strong>IndexTTS2</strong>（B站开源的情感语音合成模型）生成。
-      支持 <strong>情感精准控制</strong>（悲伤 / 愤怒 / 温柔 / 搞笑 等），
-      <strong>零样本音色克隆</strong>（提供参考音频即可模仿任何人的声音），
-      以及 <strong>精确时长控制</strong>（完美匹配画面）。
-      <br><br>
-      每段音频均为 <strong>一句合成</strong>，未经后期修音，真实还原模型表现力。
-      欢迎独立游戏开发者、视频创作者试听合作 🎧
-    </p>
-  </div>
+    <!-- ═══ Nav ═══ -->
+    <nav class="nav">
+      <div class="nav-brand">Zane<span>Voice</span></div>
+      <div class="nav-status">
+        <span class="dot"></span>
+        可接单中
+      </div>
+    </nav>
 
-  <!-- Demo Cards -->
-  <div class="demo-card">
-    <div class="card-header">
-      <div class="emoji-icon">🥺</div>
-      <div class="card-info">
-        <h3>悲伤独白 · 情感浓度 80%</h3>
-        <div class="meta">
-          <span>⏱ 15秒</span>
-          <span>🎭 情感: 悲伤</span>
+    <!-- ═══ Hero ═══ -->
+    <header class="hero">
+      <div class="hero-tag">
+        <span>⚡</span>
+        <span>情感可控 · 真人级表现力 · 零样本克隆</span>
+      </div>
+      <h1>
+        让每个角色<br>
+        都有<span class="gradient">灵魂的声音</span>
+      </h1>
+      <p>
+        基于 IndexTTS2 的高品质 AI 情感语音合成服务。<br>
+        为独立游戏、短视频、有声内容赋予独一无二的声线。
+      </p>
+    </header>
+
+    <!-- ═══ Capabilities ═══ -->
+    <div class="section-title">
+      <h2>✨ 能做什么</h2>
+      <p>从 NPC 对话到剧情旁白，一站式搞定</p>
+    </div>
+    <div class="capabilities">
+      <div class="cap-item">
+        <span class="icon">🎭</span>
+        <h4>情感精准控制</h4>
+        <p>悲伤·愤怒·温柔·幽默，浓度可调，细腻自然</p>
+      </div>
+      <div class="cap-item">
+        <span class="icon">🔊</span>
+        <h4>零样本音色克隆</h4>
+        <p>一段参考音频即可克隆任意声音，无需训练</p>
+      </div>
+      <div class="cap-item">
+        <span class="icon">⏱️</span>
+        <h4>精确时长控制</h4>
+        <p>输出时长可指定，完美对口型、匹配画面</p>
+      </div>
+    </div>
+
+    <!-- ═══ Demo Section ═══ -->
+    <div class="section-title">
+      <h2>🎧 试听作品</h2>
+      <p>同一声线 · 五种情感 —— 点击播放感受差异</p>
+    </div>
+
+    <div class="demo-list">
+
+      <!-- 悲伤 -->
+      <div class="demo-card emotion-sad">
+        <div class="card-top">
+          <div class="card-left">
+            <div class="card-emojibox">🥺</div>
+            <div class="card-info">
+              <h3>悲伤独白</h3>
+              <div class="tags">
+                <span class="tag">⏱ 15s</span>
+                <span class="tag">🎭 情感浓度 80%</span>
+              </div>
+            </div>
+          </div>
+          <span class="card-badge">悲伤</span>
+        </div>
+        <div class="card-script">
+          有些告别，是最后一次见面。那时候我还不懂，笑着说再见的人，可能真的不会再见了。
+        </div>
+        <div class="audio-wrapper">
+          <audio controls controlslist="nodownload">
+            <source src="audio/demo_sad.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+          </audio>
+        </div>
+      </div>
+
+      <!-- 愤怒 -->
+      <div class="demo-card emotion-angry">
+        <div class="card-top">
+          <div class="card-left">
+            <div class="card-emojibox">😠</div>
+            <div class="card-info">
+              <h3>愤怒争吵</h3>
+              <div class="tags">
+                <span class="tag">⏱ 18s</span>
+                <span class="tag">🎭 情感浓度 90%</span>
+              </div>
+            </div>
+          </div>
+          <span class="card-badge">愤怒</span>
+        </div>
+        <div class="card-script">
+          我说了多少次了？这不是第一次了！你根本没有听进去过，是不是觉得我永远都不会生气？
+        </div>
+        <div class="audio-wrapper">
+          <audio controls controlslist="nodownload">
+            <source src="audio/demo_angry.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+          </audio>
+        </div>
+      </div>
+
+      <!-- 温柔 -->
+      <div class="demo-card emotion-tender">
+        <div class="card-top">
+          <div class="card-left">
+            <div class="card-emojibox">💕</div>
+            <div class="card-info">
+              <h3>温柔旁白</h3>
+              <div class="tags">
+                <span class="tag">⏱ 20s</span>
+                <span class="tag">🎭 情感浓度 60%</span>
+              </div>
+            </div>
+          </div>
+          <span class="card-badge">温柔</span>
+        </div>
+        <div class="card-script">
+          夕阳把整片天空染成了橘红色，微风轻轻吹过麦田，掀起一层又一层的金色波浪。这一刻，世界安静得只剩下心跳。
+        </div>
+        <div class="audio-wrapper">
+          <audio controls controlslist="nodownload">
+            <source src="audio/demo_tender.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+          </audio>
+        </div>
+      </div>
+
+      <!-- NPC -->
+      <div class="demo-card emotion-npc">
+        <div class="card-top">
+          <div class="card-left">
+            <div class="card-emojibox">🎮</div>
+            <div class="card-info">
+              <h3>游戏 NPC 对话</h3>
+              <div class="tags">
+                <span class="tag">⏱ 15s</span>
+                <span class="tag">🎭 中性 + 惊喜</span>
+              </div>
+            </div>
+          </div>
+          <span class="card-badge">NPC</span>
+        </div>
+        <div class="card-script">
+          年轻的旅人啊，你终于来了！我等这一刻已经很久了。这把剑，是时候交给真正的主人。
+        </div>
+        <div class="audio-wrapper">
+          <audio controls controlslist="nodownload">
+            <source src="audio/demo_npc1.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+          </audio>
+        </div>
+      </div>
+
+      <!-- 搞笑 -->
+      <div class="demo-card emotion-funny">
+        <div class="card-top">
+          <div class="card-left">
+            <div class="card-emojibox">😂</div>
+            <div class="card-info">
+              <h3>搞笑吐槽</h3>
+              <div class="tags">
+                <span class="tag">⏱ 16s</span>
+                <span class="tag">🎭 情感浓度 70%</span>
+              </div>
+            </div>
+          </div>
+          <span class="card-badge">搞笑</span>
+        </div>
+        <div class="card-script">
+          你管这叫豪华套餐？这跟隔壁老王家早餐摊有什么区别！我一个面包才两块钱好吧！
+        </div>
+        <div class="audio-wrapper">
+          <audio controls controlslist="nodownload">
+            <source src="audio/demo_funny.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+          </audio>
         </div>
       </div>
     </div>
-    <audio controls controlslist="nodownload">
-      <source src="audio/demo_sad.mp3" type="audio/mpeg">
-      您的浏览器不支持音频播放
-    </audio>
-  </div>
 
-  <div class="demo-card">
-    <div class="card-header">
-      <div class="emoji-icon">😠</div>
-      <div class="card-info">
-        <h3>愤怒争吵 · 情感浓度 90%</h3>
-        <div class="meta">
-          <span>⏱ 18秒</span>
-          <span>🎭 情感: 愤怒</span>
+
+
+    <!-- ═══ How It Works ═══ -->
+    <div class="process-section">
+      <div class="section-title">
+        <h2>📋 合作流程</h2>
+        <p>沟通需求 → 快速交付，轻松省心</p>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="step-num">1</div>
+          <h4>沟通需求</h4>
+          <p>告诉我角色设定、情感类型、台词内容</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">2</div>
+          <h4>免费试配</h4>
+          <p>先试做一段听效果，满意再下单</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">3</div>
+          <h4>批量制作</h4>
+          <p>确认后一次性交付所有配音文件</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">4</div>
+          <h4>售后修音</h4>
+          <p>含免费修音次数，包你满意为止</p>
         </div>
       </div>
     </div>
-    <audio controls controlslist="nodownload">
-      <source src="audio/demo_angry.mp3" type="audio/mpeg">
-      您的浏览器不支持音频播放
-    </audio>
-  </div>
 
-  <div class="demo-card">
-    <div class="card-header">
-      <div class="emoji-icon">💕</div>
-      <div class="card-info">
-        <h3>温柔旁白 · 情感浓度 60%</h3>
-        <div class="meta">
-          <span>⏱ 20秒</span>
-          <span>🎭 情感: 温柔</span>
+    <!-- ═══ Contact ═══ -->
+    <div class="contact-section">
+      <div class="contact-card">
+        <span class="big-emoji">🎙️</span>
+        <h2>让你的角色开口说话</h2>
+        <p>
+          试配免费，先听效果再决定。<br>
+          独立游戏开发者可享特殊优惠~
+        </p>
+        <div class="contact-row">
+          <a href="#">
+            <span>💬</span>
+            <span class="item-label">微信：</span>
+            <span>17261208816</span>
+          </a>
+          <a href="#">
+            <span>📧</span>
+            <span class="item-label">邮箱：</span>
+            <span>17261208816@163.com</span>
+          </a>
         </div>
+        <a href="#" class="cta-btn">
+          <span>✉️</span>
+          <span>发送需求试配</span>
+        </a>
+        <p class="footnote">⚡ 一般 24 小时内回复 · 紧急需求可加急</p>
       </div>
     </div>
-    <audio controls controlslist="nodownload">
-      <source src="audio/demo_tender.mp3" type="audio/mpeg">
-      您的浏览器不支持音频播放
-    </audio>
+
+    <!-- ═══ Footer ═══ -->
+    <footer>
+      <p>AI 情感配音 · Zane Guo</p>
+      <p class="tech">Powered by <strong>IndexTTS2</strong> · B站开源情感语音合成</p>
+    </footer>
+
   </div>
 
-  <div class="demo-card">
-    <div class="card-header">
-      <div class="emoji-icon">🎮</div>
-      <div class="card-info">
-        <h3>游戏 NPC 对话 · 角色音色 1</h3>
-        <div class="meta">
-          <span>⏱ 15秒</span>
-          <span>🎭 情感: 中性 + 惊喜</span>
-        </div>
-      </div>
-    </div>
-    <audio controls controlslist="nodownload">
-      <source src="audio/demo_npc1.mp3" type="audio/mpeg">
-      您的浏览器不支持音频播放
-    </audio>
-  </div>
+  <!-- ═══ Auto-scroll animation trigger ═══ -->
+  <script>
+    // Intersection Observer for scroll-in animations on demo cards
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+        }
+      });
+    }, { threshold: 0.1 });
 
-  <div class="demo-card">
-    <div class="card-header">
-      <div class="emoji-icon">😂</div>
-      <div class="card-info">
-        <h3>搞笑吐槽 · 情感浓度 70%</h3>
-        <div class="meta">
-          <span>⏱ 16秒</span>
-          <span>🎭 情感: 幽默/调侃</span>
-        </div>
-      </div>
-    </div>
-    <audio controls controlslist="nodownload">
-      <source src="audio/demo_funny.mp3" type="audio/mpeg">
-      您的浏览器不支持音频播放
-    </audio>
-  </div>
-
-  <!-- 占位提示 -->
-  <div style="background: rgba(255, 200, 50, 0.08); border: 1px dashed rgba(255, 200, 50, 0.3); border-radius: var(--radius); padding: 20px; text-align: center; margin-top: 24px;">
-    <p style="color: #f0c040; font-size: 14px;">
-      🎯 此处为占位音频 · 待你用 IndexTTS2 生成后替换
-      <br>
-      <span style="color: var(--text-muted); font-size: 13px;">音频文件放在 audio/ 目录下，命名对应即可</span>
-    </p>
-  </div>
-
-  <!-- Contact -->
-  <div class="contact">
-    <h3>📩 合作联系</h3>
-    <div class="contact-items">
-      <div class="contact-item">
-        <span>💬</span>
-        <span class="label">微信: </span>
-        <span>（待填写）</span>
-      </div>
-      <div class="contact-item">
-        <span>📧</span>
-        <span class="label">邮箱: </span>
-        <span>（待填写）</span>
-      </div>
-    </div>
-    <p class="note">
-      🤝 独立游戏开发者可免费试配一段 · 长期合作价格优惠
-    </p>
-  </div>
-
-  <!-- Footer -->
-  <footer>
-    Powered by IndexTTS2 · 2026 Zane Guo
-  </footer>
-
-</div>
+    document.querySelectorAll('.demo-card').forEach(card => {
+      card.style.animationPlayState = 'paused';
+      observer.observe(card);
+    });
+  </script>
 
 </body>
 </html>
