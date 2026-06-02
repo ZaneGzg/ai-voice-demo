@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 情感配音 Demo | Zane Guo</title>
+  <style>
+    :root {
+      --primary: #6c5ce7;
+      --primary-dark: #5a4bd1;
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --text: #e8e8f0;
+      --text-muted: #9696b0;
+      --border: #2a2a4a;
+      --radius: 16px;
+      --shadow: 0 8px 32px rgba(108, 92, 231, 0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    header .subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    header .badge {
+      display: inline-block;
+      background: rgba(108, 92, 231, 0.2);
+      border: 1px solid rgba(108, 92, 231, 0.4);
+      color: #a29bfe;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    /* Intro */
+    .intro {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .intro p {
+      color: var(--text-muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .intro strong {
+      color: var(--text);
+    }
+
+    /* Demo Cards */
+    .demo-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .demo-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .demo-card .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .demo-card .emoji-icon {
+      font-size: 28px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(108, 92, 231, 0.1);
+      border-radius: 12px;
+    }
+
+    .demo-card .card-info h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .demo-card .card-info .meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+    }
+
+    .demo-card .card-info .meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Audio Player */
+    audio {
+      width: 100%;
+      height: 44px;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    audio::-webkit-media-controls-panel {
+      background: #252544;
+    }
+
+    audio::-webkit-media-controls-current-time-display,
+    audio::-webkit-media-controls-time-remaining-display {
+      color: var(--text-muted);
+    }
+
+    /* Contact */
+    .contact {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 40px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .contact h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .contact .contact-items {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .contact .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .contact .contact-item .label {
+      color: var(--text-muted);
+    }
+
+    .contact .note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 32px;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+      opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      body { padding: 20px 12px; }
+      header h1 { font-size: 22px; }
+      .contact .contact-items { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <h1>🎙️ AI 情感配音 Demo</h1>
+    <p class="subtitle">Zane Guo · 基于 IndexTTS2 的高品质语音合成</p>
+    <span class="badge">✨ 情感可控 · 音色克隆 · 真人级表现力</span>
+  </header>
+
+  <!-- Intro -->
+  <div class="intro">
+    <p>
+      本 demo 使用 <strong>IndexTTS2</strong>（B站开源的情感语音合成模型）生成。
+      支持 <strong>情感精准控制</strong>（悲伤 / 愤怒 / 温柔 / 搞笑 等），
+      <strong>零样本音色克隆</strong>（提供参考音频即可模仿任何人的声音），
+      以及 <strong>精确时长控制</strong>（完美匹配画面）。
+      <br><br>
+      每段音频均为 <strong>一句合成</strong>，未经后期修音，真实还原模型表现力。
+      欢迎独立游戏开发者、视频创作者试听合作 🎧
+    </p>
+  </div>
+
+  <!-- Demo Cards -->
+  <div class="demo-card">
+    <div class="card-header">
+      <div class="emoji-icon">🥺</div>
+      <div class="card-info">
+        <h3>悲伤独白 · 情感浓度 80%</h3>
+        <div class="meta">
+          <span>⏱ 15秒</span>
+          <span>🎭 情感: 悲伤</span>
+        </div>
+      </div>
+    </div>
+    <audio controls controlslist="nodownload">
+      <source src="audio/demo_sad.mp3" type="audio/mpeg">
+      您的浏览器不支持音频播放
+    </audio>
+  </div>
+
+  <div class="demo-card">
+    <div class="card-header">
+      <div class="emoji-icon">😠</div>
+      <div class="card-info">
+        <h3>愤怒争吵 · 情感浓度 90%</h3>
+        <div class="meta">
+          <span>⏱ 18秒</span>
+          <span>🎭 情感: 愤怒</span>
+        </div>
+      </div>
+    </div>
+    <audio controls controlslist="nodownload">
+      <source src="audio/demo_angry.mp3" type="audio/mpeg">
+      您的浏览器不支持音频播放
+    </audio>
+  </div>
+
+  <div class="demo-card">
+    <div class="card-header">
+      <div class="emoji-icon">💕</div>
+      <div class="card-info">
+        <h3>温柔旁白 · 情感浓度 60%</h3>
+        <div class="meta">
+          <span>⏱ 20秒</span>
+          <span>🎭 情感: 温柔</span>
+        </div>
+      </div>
+    </div>
+    <audio controls controlslist="nodownload">
+      <source src="audio/demo_tender.mp3" type="audio/mpeg">
+      您的浏览器不支持音频播放
+    </audio>
+  </div>
+
+  <div class="demo-card">
+    <div class="card-header">
+      <div class="emoji-icon">🎮</div>
+      <div class="card-info">
+        <h3>游戏 NPC 对话 · 角色音色 1</h3>
+        <div class="meta">
+          <span>⏱ 15秒</span>
+          <span>🎭 情感: 中性 + 惊喜</span>
+        </div>
+      </div>
+    </div>
+    <audio controls controlslist="nodownload">
+      <source src="audio/demo_npc1.mp3" type="audio/mpeg">
+      您的浏览器不支持音频播放
+    </audio>
+  </div>
+
+  <div class="demo-card">
+    <div class="card-header">
+      <div class="emoji-icon">😂</div>
+      <div class="card-info">
+        <h3>搞笑吐槽 · 情感浓度 70%</h3>
+        <div class="meta">
+          <span>⏱ 16秒</span>
+          <span>🎭 情感: 幽默/调侃</span>
+        </div>
+      </div>
+    </div>
+    <audio controls controlslist="nodownload">
+      <source src="audio/demo_funny.mp3" type="audio/mpeg">
+      您的浏览器不支持音频播放
+    </audio>
+  </div>
+
+  <!-- 占位提示 -->
+  <div style="background: rgba(255, 200, 50, 0.08); border: 1px dashed rgba(255, 200, 50, 0.3); border-radius: var(--radius); padding: 20px; text-align: center; margin-top: 24px;">
+    <p style="color: #f0c040; font-size: 14px;">
+      🎯 此处为占位音频 · 待你用 IndexTTS2 生成后替换
+      <br>
+      <span style="color: var(--text-muted); font-size: 13px;">音频文件放在 audio/ 目录下，命名对应即可</span>
+    </p>
+  </div>
+
+  <!-- Contact -->
+  <div class="contact">
+    <h3>📩 合作联系</h3>
+    <div class="contact-items">
+      <div class="contact-item">
+        <span>💬</span>
+        <span class="label">微信: </span>
+        <span>（待填写）</span>
+      </div>
+      <div class="contact-item">
+        <span>📧</span>
+        <span class="label">邮箱: </span>
+        <span>（待填写）</span>
+      </div>
+    </div>
+    <p class="note">
+      🤝 独立游戏开发者可免费试配一段 · 长期合作价格优惠
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Powered by IndexTTS2 · 2026 Zane Guo
+  </footer>
+
+</div>
+
+</body>
+</html>
